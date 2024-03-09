@@ -5,6 +5,7 @@ from abc import ABC, abstractmethod
 
 class PSourceData(Protocol):
     """ Данные, в которых необходимо произвести поиск. """
+    @abstractmethod
     def get_source_data(self) -> Any:
         """ Получение данных. """
         ...
@@ -12,10 +13,12 @@ class PSourceData(Protocol):
 
 class PWanted(Protocol):
     """ Данные, которые необходимо найти. """
+    @abstractmethod
     def wanted(self) -> Any:
         """ Данные, которые необходимо найти. """
         ...
 
+    @abstractmethod
     def set_autoseek_trigger(self, seek_trigger: Callable) -> None:
         """ Установка метода-триггера, запускающего поиск.
 
@@ -27,6 +30,7 @@ class PWanted(Protocol):
 
 class PSeeker(Protocol):
     """ Объект, производящий поиск. """
+    @abstractmethod
     def seek(self, wanted: PWanted, data: PSourceData) -> bool:
         """ Поиск данных.
 
@@ -61,4 +65,3 @@ class AView(ABC):
         :return:
         """
         ...
-
