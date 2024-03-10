@@ -1,3 +1,5 @@
+import pyperclip
+
 import protocol as p
 from Legacy.view import PySide6Realisation
 from Legacy.data import Data
@@ -14,3 +16,7 @@ class Logic:
     @classmethod
     def seek_trigger(cls) -> None:
         pass
+
+    @classmethod
+    def run_in_main(cls):
+        cls.view.set_seek_method(cls.seek_trigger)

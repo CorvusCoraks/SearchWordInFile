@@ -3,4 +3,5 @@
 
 conda install conda-forge::pyperclip
 
-conda install conda-forge::pyside6
+- conda install conda-forge::pyside6
+conda install pyside6
