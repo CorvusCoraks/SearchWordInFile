@@ -1,17 +1,17 @@
 from logic import Logic
-from ryarn import YarnRealisation, YarnQueue
-from ayarn import AQueuePull, AYarn, Direction, APP_FIN_QUEUE_NAME
-from queue import Queue
+from ryarn import QueuesPull
+from abstractyarn import AbstractQueuesPull, AbstractYarn, Direction, APP_FIN_QUEUE_NAME, Abonents
 
-queues: AQueuePull = YarnQueue()
-queues.add_queue('selected', Direction.FROM_THREAD, str)
-queues.add_queue(APP_FIN_QUEUE_NAME, Direction.TO_THREAD, bool)
 
-thread: AYarn = YarnRealisation(queues)
+queues: AbstractQueuesPull = QueuesPull()
+queues.add_queue('selected', Direction(Abonents.SEEKER, Abonents.VIEW), str)
+queues.add_queue(APP_FIN_QUEUE_NAME, Direction(Abonents.VIEW, Abonents.SEEKER), bool)
+queues.add_queue('find_it', Direction(Abonents.VIEW, Abonents.SEEKER), str)
 
 
 if __name__ == '__main__':
-    thread.run()
+    thread: AbstractYarn = AbstractYarn(queues, Logic.seek_thread_method)
+    thread.start()
 
     Logic.run_in_main()
 

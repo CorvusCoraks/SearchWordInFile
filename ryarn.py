@@ -1,15 +1,15 @@
 from typing import Any
-from ayarn import AYarn, AQueuePull, Direction, OneQueue
+from abstractyarn import AbstractYarn, AbstractQueuesPull, Direction, QueueInPull
 # import asyncio
 from queue import Queue
 
 
-class YarnQueue(AQueuePull):
+class QueuesPull(AbstractQueuesPull):
     def __init__(self):
-        self._queues: dict[str, OneQueue] = {}
+        self._queues: dict[str, QueueInPull] = {}
 
     def add_queue(self, queue_name: str, direction: Direction, datatype: type) -> None:
-        self._queues[queue_name] = OneQueue(direction=direction, datatype=datatype, queue=Queue())
+        self._queues[queue_name] = QueueInPull(direction=direction, datatype=datatype, queue=Queue())
 
     def get_queue(self, queue_name: str) -> tuple[Queue, Direction, type]:
         return self._queues[queue_name].queue, self._queues[queue_name].direction, self._queues[queue_name].datatype
@@ -26,6 +26,9 @@ class YarnQueue(AQueuePull):
         return self._queues[queue_name].queue.get()
 
 
-class YarnRealisation(AYarn):
-    async def async_run(self):
-        pass
+# class YarnRealisation(AbstractYarn):
+#     async def async_run(self):
+#         for i in range(5):
+#             print('async_run')
+
+

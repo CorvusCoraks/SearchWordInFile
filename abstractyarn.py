@@ -1,32 +1,39 @@
 from threading import Thread
-from typing import Protocol, Any
+from typing import Protocol, Any, Callable
 from abc import ABC, abstractmethod
 from enum import Enum
 from queue import Queue
 import asyncio
 from dataclasses import dataclass
+from config import ASYNCIO_SLEEP_TIME
+from time import sleep
 
 
 APP_FIN_QUEUE_NAME: str = 'app_fin'
-ASYNCIO_SLEEP_TIME = 1000
 
 
-class Direction(Enum):
-    """ Направление очереди.
-    Можно использовать для контроля правильности выбора очереди при отправке и получении данных."""
-    TO_THREAD = 1
-    FROM_THREAD = 2
+class Abonents(Enum):
+    """ Абоненты отправки и получения сообщений через очереди. """
+    SEEKER = 1
+    VIEW = 2
 
 
 @dataclass
-class OneQueue:
+class Direction:
+    """ Направление передачи сообщения. """
+    sender: Abonents
+    receiver: Abonents
+
+
+@dataclass
+class QueueInPull:
     """ Очередь, содержащаяся в пуле очередей. """
-    direction: Direction
     queue: Queue
     datatype: type
+    direction: Direction
 
 
-class PQueue(Protocol):
+class QueueProtocol(Protocol):
     """ Протокол отправки/получения данных в/из очереди. """
     @abstractmethod
     def send(self, queue_name: str, data: Any) -> None:
@@ -48,7 +55,7 @@ class PQueue(Protocol):
         ...
 
 
-class AQueuePull(ABC, PQueue):
+class AbstractQueuesPull(ABC, QueueProtocol):
     """ Пул очередей по обмену данными между основной нитью и дополнительной. """
     @abstractmethod
     def add_queue(self, queue_name: str, direction: Direction, datatype: type) -> None:
@@ -70,37 +77,48 @@ class AQueuePull(ABC, PQueue):
         """
         ...
 
-    async def incoming_waiting(self, queue_name: str) -> bool:
+    def is_app_fin(self) -> bool:
+        """ В очередь отправлена команда на завершение приложения. """
+        fin_queue, _, _ = self.get_queue(APP_FIN_QUEUE_NAME)
+        return not fin_queue.empty()
+
+    def incoming_waiting(self, queue_name: str, wating_time: int = None) -> bool:
         """ Метод ожидания появления данных в очереди. А на фига он нужен? """
+        time = 0
         while True:
-            fin_queue, _, _ = self.get_queue(APP_FIN_QUEUE_NAME)
-            if not fin_queue.empty():
+            if self.is_app_fin():
                 # Появилась команда на завершение приложения. Выходим из вечного цикла.
-                break
+                return False
             else:
                 listened_queue, _, _ = self.get_queue(queue_name)
                 if listened_queue.empty():
-                    await asyncio.sleep(ASYNCIO_SLEEP_TIME)
+                    sleep(ASYNCIO_SLEEP_TIME)
+                    if wating_time is not None and time > wating_time:
+                        return False
+                    else:
+                        time += ASYNCIO_SLEEP_TIME
                 else:
                     return True
 
 
-class AYarn(Thread, ABC):
-    """ Класс дополнительной нити. """
-    def __init__(self, queues: AQueuePull):
-        super().__init__(daemon=True)
 
-        self._queues: AQueuePull = queues
+
+class AbstractYarn(Thread, ABC):
+    """ Класс дополнительной нити. """
+    # todo уже не абстрактный класс.
+    def __init__(self, queues: AbstractQueuesPull, in_thread_method: Callable):
+        """
+
+        :param queues: Пул очередей, для взаимодействия с нитью.
+        :param in_thread_method: внешний метод, предназначенный для запуска внутри нити.
+        """
+        super().__init__(target=in_thread_method, daemon=True, args=(queues,))
+
+        self._queues: AbstractQueuesPull = queues
+        # self._asyncio_method: Callable = asyncio_method_in_thread_execution
+        self._in_thread_method: Callable = in_thread_method
 
     @property
     def queues(self):
         """ Пул очередей по обмену данными. """
         return self._queues
-
-    @abstractmethod
-    async def async_run(self):
-        """ Метод реализации асинхронности. """
-        ...
-
-    def run(self):
-        asyncio.run(self.async_run())
