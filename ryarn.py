@@ -1,5 +1,6 @@
 from typing import Any
-from abstractyarn import AbstractYarn, AbstractQueuesPull, Direction, QueueInPull
+from abstractyarn import AbstractYarn
+from queues import Direction, QueueInPull, AbstractQueuesPull
 # import asyncio
 from queue import Queue
 

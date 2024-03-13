@@ -1,6 +1,7 @@
 """ Модуль с протоколами, абстрактными классами и интерфейсами. """
 from typing import Protocol, Any, Callable
 from abc import ABC, abstractmethod
+from queues import AbstractQueuesPull
 
 
 class PSourceData(Protocol):
@@ -43,6 +44,14 @@ class PSeeker(Protocol):
 
 class AView(ABC):
     """ Класс отображения. """
+    @abstractmethod
+    def __init__(self, queues_pull: AbstractQueuesPull):
+        """
+
+        :param queues_pull: Пул очередей обмена сообщениями между блоками приложения.
+        """
+        ...
+
     @abstractmethod
     def run_in_main(self) -> None:
         """ Метод, который, при необходимости, надо разместить в модуле main, для корректной работы визуализации. """
