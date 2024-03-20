@@ -1,5 +1,5 @@
 from PySide6.QtCore import QThread, Signal, QObject, QTimer, Slot
-from queues import AbstractQueuesPull
+from queues import QueueProtocol, QueueName
 from enum import Enum
 from typing import Callable
 
@@ -16,10 +16,12 @@ class Signals(Enum):
 
 class ChildThread(QThread):
     """ Класс дополнительной нити GUI. """
-    def __init__(self, to_thread_init_method: Callable, queues_pull: AbstractQueuesPull):
+    def __init__(self, to_thread_init_method: Callable, queues_pull: QueueProtocol):
         super().__init__()
 
         to_thread_init_method()
+
+        self.queues_pull: QueueProtocol = queues_pull
 
 
 class Worker(QObject):
@@ -28,18 +30,33 @@ class Worker(QObject):
     signalTimer_FromMainToWorker = Signal(str)
     # signalTicker = Signal(int)
 
-    # def __init__(self, searchResultSignal: Signal):
-    #     super().__init__()
-    #
-    #     # Запуск этого сигнала из данного объекта (emit()) передаст результат поиска в нить GUI
-    #     self.__searchResultSignal = searchResultSignal
+    def __init__(self):
+        super().__init__()
+
+        self.__queues_pull: QueueProtocol = None
+
+    def is_queuepull_connected(self) -> bool:
+        if self.__queues_pull is None:
+            if isinstance(self.thread(), ChildThread):
+                self.__queues_pull = self.thread().queues_pull
+                return True
+            else:
+                return False
+        return True
 
     @Slot(Signals)
     def slotStartSearchHandler(self, value):
         """ Обработчик нажатия кнопки поиска в GUI. """
+
+        # queues_pull: QueueProtocol = self.thread().
+        if not self.is_queuepull_connected():
+            return
+
         match value:
             case Signals.START_SEARCH:
                 print(f"Main Window signal: Start Search! Value from Main Window: {value}")
+                # Отправка команды на поиск в блок поиска
+                self.__queues_pull.send(QueueName.FIND_IT, '')
             case _:
                 print("Unknown press button signal.")
 
@@ -50,7 +67,20 @@ class Worker(QObject):
     @Slot()
     def __slotWorkerTicker(self):
         """ Метод, периодически запускаемый в нити по сигналу тикера. """
-        print("Внутренний тикер дополнительной нити GUI.")
+        # print("Внутренний тикер дополнительной нити GUI.")
+
+        # if self.__queues_pull is None:
+        #     if isinstance(self.thread(), ChildThread):
+        #         self.__queues_pull = self.thread().queues_pull
+        #     else:
+        #         return
+
+        if not self.is_queuepull_connected():
+            return
+
+        if not self.__queues_pull.is_empty(QueueName.SEARCH_RESULT):
+            print("Search result:", self.__queues_pull.receive(QueueName.SEARCH_RESULT))
+        # print(f"Queues pull: {queues_pull}")
 
     def run(self):
         print("Run объекта.")

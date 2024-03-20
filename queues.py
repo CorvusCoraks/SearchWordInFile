@@ -7,13 +7,28 @@ from typing import Protocol, Any
 from config import ASYNCIO_SLEEP_TIME
 
 
-APP_FIN_QUEUE_NAME: str = 'app_fin'
+# APP_FIN_QUEUE_NAME: str = 'app_fin'
 
 
 class Abonents(Enum):
     """ Абоненты отправки и получения сообщений через очереди. """
     SEEKER = 1
     VIEW = 2
+
+
+@dataclass
+class QueueName(ABC):
+    """ Имена очередей приложения. Просто хранилище 'констант'. Создание экзепляров класса не предусмотрено. """
+
+    # Слово выделено.
+    # todo Использовать не представляется возможным.
+    WORD_SELECTED: str = 'selected'
+    # Команда из GUI на поиск.
+    FIND_IT: str = 'find_it'
+    # Команда на завершение приложения.
+    APP_FIN: str = 'app_fin'
+    # Результаты поиска
+    SEARCH_RESULT: str = 'result'
 
 
 @dataclass
@@ -52,6 +67,19 @@ class QueueProtocol(Protocol):
         """
         ...
 
+    @abstractmethod
+    def is_empty(self, queue_name: str) -> bool:
+        """ Очередь пуста?
+
+        :param queue_name: Имя очереди.
+        """
+        ...
+
+    @abstractmethod
+    def is_app_fin(self) -> bool:
+        """ В очередь отправлена команда на завершение приложения. """
+        ...
+
 
 class AbstractQueuesPull(ABC, QueueProtocol):
     """ Пул очередей по обмену данными между основной нитью и дополнительной. """
@@ -66,34 +94,31 @@ class AbstractQueuesPull(ABC, QueueProtocol):
         """
         ...
 
-    @abstractmethod
-    def get_queue(self, queue_name: str) -> tuple[Queue, Direction, type]:
-        """ Получить очередь по её имени.
+    # @abstractmethod
+    # def get_queue(self, queue_name: str) -> tuple[Queue, Direction, type]:
+    #     """ Получить очередь по её имени.
+    #
+    #     :param queue_name: Имя очереди.
+    #     :return: Очередь.
+    #     """
+    #     ...
 
-        :param queue_name: Имя очереди.
-        :return: Очередь.
-        """
-        ...
 
-    def is_app_fin(self) -> bool:
-        """ В очередь отправлена команда на завершение приложения. """
-        fin_queue, _, _ = self.get_queue(APP_FIN_QUEUE_NAME)
-        return not fin_queue.empty()
 
-    def incoming_waiting(self, queue_name: str, wating_time: int = None) -> bool:
-        """ Метод ожидания появления данных в очереди. А на фига он нужен? """
-        time = 0
-        while True:
-            if self.is_app_fin():
-                # Появилась команда на завершение приложения. Выходим из вечного цикла.
-                return False
-            else:
-                listened_queue, _, _ = self.get_queue(queue_name)
-                if listened_queue.empty():
-                    sleep(ASYNCIO_SLEEP_TIME)
-                    if wating_time is not None and time > wating_time:
-                        return False
-                    else:
-                        time += ASYNCIO_SLEEP_TIME
-                else:
-                    return True
+    # def incoming_waiting(self, queue_name: str, wating_time: int = None) -> bool:
+    #     """ Метод ожидания появления данных в очереди. А на фига он нужен? """
+    #     time = 0
+    #     while True:
+    #         if self.is_app_fin():
+    #             # Появилась команда на завершение приложения. Выходим из вечного цикла.
+    #             return False
+    #         else:
+    #             listened_queue, _, _ = self.get_queue(queue_name)
+    #             if listened_queue.empty():
+    #                 sleep(ASYNCIO_SLEEP_TIME)
+    #                 if wating_time is not None and time > wating_time:
+    #                     return False
+    #                 else:
+    #                     time += ASYNCIO_SLEEP_TIME
+    #             else:
+    #                 return True

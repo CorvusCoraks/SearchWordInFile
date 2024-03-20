@@ -1,6 +1,6 @@
 from typing import Any
 from abstractyarn import AbstractYarn
-from queues import Direction, QueueInPull, AbstractQueuesPull
+from queues import Direction, QueueInPull, AbstractQueuesPull, QueueName
 # import asyncio
 from queue import Queue
 
@@ -12,8 +12,8 @@ class QueuesPull(AbstractQueuesPull):
     def add_queue(self, queue_name: str, direction: Direction, datatype: type) -> None:
         self._queues[queue_name] = QueueInPull(direction=direction, datatype=datatype, queue=Queue())
 
-    def get_queue(self, queue_name: str) -> tuple[Queue, Direction, type]:
-        return self._queues[queue_name].queue, self._queues[queue_name].direction, self._queues[queue_name].datatype
+    # def get_queue(self, queue_name: str) -> tuple[Queue, Direction, type]:
+    #     return self._queues[queue_name].queue, self._queues[queue_name].direction, self._queues[queue_name].datatype
 
     def send(self, queue_name: str, data: Any) -> None:
         if isinstance(data, self._queues[queue_name].datatype):
@@ -26,6 +26,11 @@ class QueuesPull(AbstractQueuesPull):
     def receive(self, queue_name: str) -> Any:
         return self._queues[queue_name].queue.get()
 
+    def is_empty(self, queue_name: str) -> bool:
+        return self._queues[queue_name].queue.empty()
+
+    def is_app_fin(self) -> bool:
+        return not self.is_empty(QueueName.APP_FIN)
 
 # class YarnRealisation(AbstractYarn):
 #     async def async_run(self):

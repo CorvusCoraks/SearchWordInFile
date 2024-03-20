@@ -4,7 +4,7 @@ from PySide6.QtCore import Qt, Slot, Signal, QTimer
 from Legacy.view_sig import ChildThread, Worker, Signals
 from protocol import AView
 import sys
-from queues import AbstractQueuesPull
+from queues import AbstractQueuesPull, QueueProtocol
 
 
 # class ViewMeta(type(QMainWindow), type(AView)):
@@ -75,7 +75,7 @@ class PySide6Realisation(AView):
                 print("Timer stopped!")
                 self.__tm.stop()
 
-    def __init__(self, queues_pull: AbstractQueuesPull):
+    def __init__(self, queues_pull: QueueProtocol):
         """
 
         :param queues_pull: Пул очередей для обмена сообщения с блоком поиска приложения.

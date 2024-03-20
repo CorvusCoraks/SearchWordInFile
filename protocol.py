@@ -1,13 +1,13 @@
 """ Модуль с протоколами, абстрактными классами и интерфейсами. """
 from typing import Protocol, Any, Callable
 from abc import ABC, abstractmethod
-from queues import AbstractQueuesPull
+from queues import AbstractQueuesPull, QueueProtocol
 
 
 class PSourceData(Protocol):
     """ Данные, в которых необходимо произвести поиск. """
     @abstractmethod
-    def get_source_data(self) -> Any:
+    def get_source_data(self) -> str:
         """ Получение данных. """
         ...
 
@@ -16,6 +16,11 @@ class PWanted(Protocol):
     """ Данные, которые необходимо найти. """
     @abstractmethod
     def wanted(self) -> Any:
+        """ Данные, которые необходимо найти. deprecated?"""
+        ...
+
+    @abstractmethod
+    def get_wanted(self) -> str:
         """ Данные, которые необходимо найти. """
         ...
 
@@ -45,7 +50,7 @@ class PSeeker(Protocol):
 class AView(ABC):
     """ Класс отображения. """
     @abstractmethod
-    def __init__(self, queues_pull: AbstractQueuesPull):
+    def __init__(self, queues_pull: QueueProtocol):
         """
 
         :param queues_pull: Пул очередей обмена сообщениями между блоками приложения.
