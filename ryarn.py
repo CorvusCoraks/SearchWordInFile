@@ -1,6 +1,6 @@
 from typing import Any
 from abstractyarn import AbstractYarn
-from queues import Direction, QueueInPull, AbstractQueuesPull, QueueName
+from queues import Direction, QueueInPull, AbstractQueuesPull, QueueName, QueuesDataType
 # import asyncio
 from queue import Queue
 
@@ -9,13 +9,13 @@ class QueuesPull(AbstractQueuesPull):
     def __init__(self):
         self._queues: dict[str, QueueInPull] = {}
 
-    def add_queue(self, queue_name: str, direction: Direction, datatype: type) -> None:
+    def add_queue(self, queue_name: str, direction: Direction, datatype: type(QueuesDataType)) -> None:
         self._queues[queue_name] = QueueInPull(direction=direction, datatype=datatype, queue=Queue())
 
     # def get_queue(self, queue_name: str) -> tuple[Queue, Direction, type]:
     #     return self._queues[queue_name].queue, self._queues[queue_name].direction, self._queues[queue_name].datatype
 
-    def send(self, queue_name: str, data: Any) -> None:
+    def send(self, queue_name: str, data: QueuesDataType) -> None:
         if isinstance(data, self._queues[queue_name].datatype):
             self._queues[queue_name].queue.put(data)
         else:
@@ -23,7 +23,7 @@ class QueuesPull(AbstractQueuesPull):
                             f"mismatch expected type ({self._queues[queue_name].datatype}) "
                             f"for sending through queue '{queue_name}'.")
 
-    def receive(self, queue_name: str) -> Any:
+    def receive(self, queue_name: str) -> QueuesDataType:
         return self._queues[queue_name].queue.get()
 
     def is_empty(self, queue_name: str) -> bool:

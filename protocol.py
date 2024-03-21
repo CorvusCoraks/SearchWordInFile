@@ -2,10 +2,12 @@
 from typing import Protocol, Any, Callable
 from abc import ABC, abstractmethod
 from queues import AbstractQueuesPull, QueueProtocol
+from config import ResultDict
 
 
 class PSourceData(Protocol):
     """ Данные, в которых необходимо произвести поиск. """
+    @property
     @abstractmethod
     def get_source_data(self) -> str:
         """ Получение данных. """
@@ -37,12 +39,12 @@ class PWanted(Protocol):
 class PSeeker(Protocol):
     """ Объект, производящий поиск. """
     @abstractmethod
-    def seek(self, wanted: PWanted, data: PSourceData) -> bool:
+    def seek(self, wanted: PWanted, data: PSourceData) -> ResultDict:
         """ Поиск данных.
 
         :param wanted: Данные, которые необходимо найти.
         :param data: Данные, в которых производится поиск.
-        :return: Поиск успешен или нет?
+        :return: Словарь результата поиска: {Найденный ключ, соответствующая величина}
         """
         ...
 

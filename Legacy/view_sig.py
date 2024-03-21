@@ -1,17 +1,26 @@
 from PySide6.QtCore import QThread, Signal, QObject, QTimer, Slot
 from queues import QueueProtocol, QueueName
 from enum import Enum
-from typing import Callable
+from typing import Callable, Any, Union, Optional
+from config import ResultDict
+from dataclasses import dataclass
 
 
 # Пауза между тиками тикера нити.
 TICKER_PAUSE = 1000
 
 
-class Signals(Enum):
+class SignalType(Enum):
     START_SEARCH = 0
     NOT_FOUNDED = 1
     FOUNDED = 2
+
+
+@dataclass
+class Signals:
+    """ Содержимое Qt-сигналов. """
+    signal: SignalType
+    content: Optional[Union[bool, str, int, ResultDict]] = None
 
 
 class ChildThread(QThread):
@@ -27,13 +36,18 @@ class ChildThread(QThread):
 class Worker(QObject):
     """ Класс, обеспечивающий возможность отправки сигналов в главную нить GUI (работает в дополнительной нити) """
     signalStartSearch_FromMainToWorker = Signal(Signals)
-    signalTimer_FromMainToWorker = Signal(str)
+    signalTimer_FromMainToWorker = Signal(Signals)
     # signalTicker = Signal(int)
 
-    def __init__(self):
+    def __init__(self, signal_SearchResult: Signal):
+        """
+
+        :param signal_SearchResult: сигнал о результатах поиска, подаваемый из поднити в нить GUI.
+        """
         super().__init__()
 
-        self.__queues_pull: QueueProtocol = None
+        self.__queues_pull: Optional[QueueProtocol] = None
+        self.__signal_SearchResult: Signal = signal_SearchResult
 
     def is_queuepull_connected(self) -> bool:
         if self.__queues_pull is None:
@@ -52,8 +66,8 @@ class Worker(QObject):
         if not self.is_queuepull_connected():
             return
 
-        match value:
-            case Signals.START_SEARCH:
+        match value.signal:
+            case SignalType.START_SEARCH:
                 print(f"Main Window signal: Start Search! Value from Main Window: {value}")
                 # Отправка команды на поиск в блок поиска
                 self.__queues_pull.send(QueueName.FIND_IT, '')
@@ -79,8 +93,12 @@ class Worker(QObject):
             return
 
         if not self.__queues_pull.is_empty(QueueName.SEARCH_RESULT):
-            print("Search result:", self.__queues_pull.receive(QueueName.SEARCH_RESULT))
-        # print(f"Queues pull: {queues_pull}")
+            search_result = self.__queues_pull.receive(QueueName.SEARCH_RESULT)
+            print("Search result:", search_result)
+            if search_result.status:
+                self.__signal_SearchResult.emit(Signals(signal=SignalType.FOUNDED, content=search_result))
+            else:
+                self.__signal_SearchResult.emit(Signals(signal=SignalType.NOT_FOUNDED))
 
     def run(self):
         print("Run объекта.")

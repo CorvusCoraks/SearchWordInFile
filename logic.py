@@ -3,7 +3,7 @@ from Legacy.view import PySide6Realisation
 from Legacy.data import Data
 from Legacy.wanted import WantedString
 from Legacy.seeker import Seeker
-from queues import AbstractQueuesPull, Direction, Abonents, QueueName, QueueProtocol
+from queues import AbstractQueuesPull, Direction, Abonents, QueueName, QueueProtocol, SearchResult
 from ryarn import QueuesPull
 from time import sleep
 from config import ASYNCIO_SLEEP_TIME
@@ -30,7 +30,7 @@ class Logic:
         cls.queues_pull.add_queue(QueueName.WORD_SELECTED, Direction(Abonents.SEEKER, Abonents.VIEW), str)
         cls.queues_pull.add_queue(QueueName.APP_FIN, Direction(Abonents.VIEW, Abonents.SEEKER), bool)
         cls.queues_pull.add_queue(QueueName.FIND_IT, Direction(Abonents.VIEW, Abonents.SEEKER), str)
-        cls.queues_pull.add_queue(QueueName.SEARCH_RESULT, Direction(Abonents.SEEKER, Abonents.VIEW), bool)
+        cls.queues_pull.add_queue(QueueName.SEARCH_RESULT, Direction(Abonents.SEEKER, Abonents.VIEW), SearchResult)
 
     @classmethod
     def seek_thread_method(cls, queues: QueueProtocol):
@@ -51,7 +51,7 @@ class Logic:
                 # Результат поиска
                 search_result = cls.seeker.seek(cls.wanted, cls.data)
                 # Отправка результата в GUI
-                queues.send(QueueName.SEARCH_RESULT, search_result)
+                queues.send(QueueName.SEARCH_RESULT, SearchResult(len(search_result) > 0, search_result))
 
             sleep(ASYNCIO_SLEEP_TIME)
 
