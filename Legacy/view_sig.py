@@ -4,10 +4,11 @@ from enum import Enum
 from typing import Callable, Any, Union, Optional
 from config import ResultDict
 from dataclasses import dataclass
+from config import ASYNCIO_SLEEP_TIME, msec
 
 
-# Пауза между тиками тикера нити.
-TICKER_PAUSE = 1000
+# Пауза между тиками тикера QTimer нити (миллисекунд)
+TICKER_PAUSE: msec = msec(ASYNCIO_SLEEP_TIME * 1000)
 
 
 class SignalType(Enum):

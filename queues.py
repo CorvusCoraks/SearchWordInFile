@@ -16,9 +16,9 @@ class Abonents(Enum):
 @dataclass
 class SearchResult:
     """ Результат поиска. """
-    status: bool                        # Успешно / неудачно.
-    #request: str                        # Что, собственно, искалось.
-    result: Optional[ResultDict]    # Список результатов или None.
+    status: bool        # Успешно / неудачно.
+    #request: str       # Что, собственно, искалось.
+    result: ResultDict  # Список результатов.
 
 
 # Типы данных для передачи через очереди.

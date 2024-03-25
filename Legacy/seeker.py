@@ -1,5 +1,5 @@
 from protocol import PSeeker, PWanted, PSourceData
-from config import NOT_STRING, ResultDict
+from config import NOT_STRING, ResultDict, SEARCHED_STRING_MARK
 from re import findall, MULTILINE
 from queues import SearchResult
 
@@ -50,8 +50,9 @@ class Seeker(PSeeker):
 
         if string_for_search == NOT_STRING:
             # todo обработать, если в буфере обмена не строка
-            return {}
+            return []
         else:
+            result = [[string_for_search, SEARCHED_STRING_MARK]]
             string_for_search = self._preparing(string_for_search)
             # pattern = r'\t+.*?' + string_for_search + r'.*?\t+.*?\r\n'
             pattern = r'\t+(.*?' + string_for_search + r'.*?)\t+'
@@ -59,7 +60,8 @@ class Seeker(PSeeker):
 
             search_result: list = findall(pattern, data.get_source_data, flags=MULTILINE)
 
-            result = {value[0]: value[1] for value in search_result}
+            # result = {value[0]: value[1] for value in search_result}
+            result.extend([[value[0], value[1]] for value in search_result])
 
             return result
 
