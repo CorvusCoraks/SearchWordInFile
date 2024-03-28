@@ -1,3 +1,4 @@
+""" Модуль, объединяющий визуализацию и поиск. Контроллер? """
 import protocol as p
 from Legacy.view import PySide6Realisation
 from Legacy.data import Data

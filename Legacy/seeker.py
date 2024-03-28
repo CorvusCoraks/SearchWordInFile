@@ -1,3 +1,4 @@
+""" Модуль поиска ('поисковик') """
 from protocol import PSeeker, PWanted, PSourceData
 from config import NOT_STRING, ResultDict, SEARCHED_STRING_MARK
 from re import findall, MULTILINE

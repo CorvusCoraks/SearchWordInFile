@@ -1,0 +1,1 @@
+OUTPUT_LABEL_LENGTH: int = 30

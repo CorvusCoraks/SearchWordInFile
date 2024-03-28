@@ -28,6 +28,9 @@ ResultDict = list[list[str]]
 SEARCHED_STRING_MARK = 'SEARCHED_STRING_MARK'
 
 
+
+# OUTPUT_STRING: str = r"{name:15}{vacancy:15}"
+
 # def to_msec(s: sec) -> msec:
 #     return msec(s * 1000)
 #

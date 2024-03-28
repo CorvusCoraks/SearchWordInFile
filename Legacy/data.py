@@ -1,3 +1,4 @@
+""" Модуль данных, в которых производится поиск. """
 from protocol import PSourceData
 from config import SOURCE_FILE_NAME
 

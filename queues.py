@@ -1,3 +1,4 @@
+""" Очереди обмена сообщениями внутри приложения. """
 from abc import abstractmethod, ABC
 from dataclasses import dataclass
 from enum import Enum

@@ -1,3 +1,4 @@
+""" Пул очередей. """
 from typing import Any
 from abstractyarn import AbstractYarn
 from queues import Direction, QueueInPull, AbstractQueuesPull, QueueName, QueuesDataType

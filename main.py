@@ -1,3 +1,4 @@
+""" Главный модул приложения. """
 from logic import Logic
 from abstractyarn import AbstractYarn
 

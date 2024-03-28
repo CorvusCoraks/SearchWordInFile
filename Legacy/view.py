@@ -1,12 +1,14 @@
+""" Модуль визуализации с помощью PySide6. """
 from typing import Callable, Optional
 from PySide6.QtWidgets import QApplication, QPushButton, QMainWindow, QLabel, QVBoxLayout, QWidget
-from PySide6.QtCore import Qt, Slot, Signal, QTimer, QPoint
+from PySide6.QtCore import Qt, Slot, Signal, QTimer, QPoint, QRect
 from PySide6.QtGui import QGuiApplication
 from Legacy.view_sig import ChildThread, Worker, Signals, SignalType
+from Legacy.config import OUTPUT_LABEL_LENGTH
 from protocol import AView
 import sys
 from queues import AbstractQueuesPull, QueueProtocol
-from config import ResultDict
+# from config import ResultDict, OUTPUT_STRING
 
 
 # class ViewMeta(type(QMainWindow), type(AView)):
@@ -24,11 +26,15 @@ class PySyde6QMainWindow(QMainWindow):
         # RuntimeError: '__init__' method of object's base class (PySyde6QMainWindow) not called.
         QMainWindow.__init__(self, flags=Qt.WindowType.WindowStaysOnTopHint | Qt.WindowType.BypassWindowManagerHint)
 
+
+
         # Окно уже ставилось в начальную позицию?
         self.__is_set_start_pos: bool = False
         # Счётчик, с помощью которого пропускается первое событие перемещения окна.
         # Если счётчик == 0, то первое перемещение уже было.
         self.__move_event_counter: int = 1
+
+        self.__labels: list[QLabel] = []
 
         self.__app = app
         # https://stackoverflow.com/questions/74418142/minimal-pyside6-code-to-get-screen-resolution
@@ -41,7 +47,7 @@ class PySyde6QMainWindow(QMainWindow):
         self.setWindowTitle("PySide6 Application")
 
         # Метка подробностей о позиции, на которую был отклик.
-        self.lbl = QLabel("Hello World!")
+        # self.lbl = QLabel("Hello World!")
         # Кнопка команды на начало поиска.
         self.btn = QPushButton("What to do.")
 
@@ -50,14 +56,17 @@ class PySyde6QMainWindow(QMainWindow):
         # Установка виджета в центральную част окна.
         self.setCentralWidget(self.qw)
 
-        self.layout = QVBoxLayout(self.qw)
-        self.layout.addWidget(self.btn)
-        self.layout.addWidget(self.lbl)
+        self.__layout = QVBoxLayout(self.qw)
+        self.__layout.setAlignment(Qt.AlignmentFlag.AlignTop)
+        self.__layout.addWidget(self.btn)
+        # self.__layout.addWidget(self.lbl)
 
         # Связывание со слотом сигнала из вспомогательной нити о результатах поиска.
         self.signal_SearchResult.connect(self.__searchResult)
         # Подключение обработчика клика по кнопке
         self.btn.clicked.connect(self.__buttonClick)
+
+        self.resize(200, 250)
 
         # print(self.frameSize(), self.maximumSize(), self.minimumSizeHint(), self.pos(), self.rect(), self.size(), sep='\n')
         # print(self.x(), self.y())
@@ -87,6 +96,7 @@ class PySyde6QMainWindow(QMainWindow):
         # Что характерно, в приложении эти перемещения не инициируются, это, видимо, работа OC?
         if not self.__is_set_start_pos and self.__move_event_counter == 0:
             self.__is_set_start_pos = True
+            # self.resize(self.width(), self.height() * 2)
             x = self.__screen_width - self.frameSize().width() - 10
             y = self.__screen_height - self.frameSize().height() - 10
             # Перемещаем окно в нужную позицию
@@ -108,8 +118,21 @@ class PySyde6QMainWindow(QMainWindow):
         """ Обработчик сигнала о результатах поиска. """
         match value.signal:
             case SignalType.FOUNDED:
-                print("GUI reaction: ", SignalType.FOUNDED, '\n', value.content)
-                pass
+                for label in self.__labels:
+                    self.__layout.removeWidget(label)
+                    label.deleteLater()
+                self.__labels = []
+                # print("GUI reaction: ", SignalType.FOUNDED, '\n', value.content)
+                # print(f"GUI reaction: {SignalType.FOUNDED} \n {value.content.result[1][0][:5:]}...")
+                # self.lbl.setText(f"{value.content.result[1][0][:15:]}... {value.content.result[1][1][:15:]}...")
+                for i in range(1, len(value.content.result)):
+                    l_name = QLabel(f"{value.content.result[i][0][:OUTPUT_LABEL_LENGTH:]}...")
+                    l_vacancy = QLabel(f"{value.content.result[i][1][:OUTPUT_LABEL_LENGTH:]}...")
+                    self.__layout.addWidget(l_name)
+                    self.__layout.addWidget(l_vacancy)
+                    self.__labels.append(l_name)
+                    self.__labels.append(l_vacancy)
+                # self.repaint()
             case SignalType.NOT_FOUNDED:
                 pass
             case _:
